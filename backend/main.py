@@ -12,6 +12,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+import lesson
 import rag
 
 app = FastAPI(title="AI Training Assistant")
@@ -56,3 +57,18 @@ def ask(body: Question):
     if not body.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
     return rag.ask(body.question)
+
+
+class Topic(BaseModel):
+    topic: str
+
+
+@app.post("/teach", response_model=lesson.Lesson)
+def teach(body: Topic):
+    """Give a topic; returns a step-by-step lesson script for the whiteboard."""
+    if not body.topic.strip():
+        raise HTTPException(status_code=400, detail="Topic cannot be empty")
+    try:
+        return lesson.make_lesson(body.topic)
+    except ValueError as e:
+        raise HTTPException(status_code=502, detail=str(e))
