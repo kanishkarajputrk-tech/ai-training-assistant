@@ -12,8 +12,8 @@
 
     ## Run it
     1. Install Ollama, then:
-   ollama pull llama3.2:3b
-   ollama pull nomic-embed-text
+    ollama pull llama3.2:3b
+    ollama pull nomic-embed-text
     2. pip install -r requirements.txt
     3. python step1_rag.py ingest your_file.pdf
     4. python step1_rag.py ask "your question"
