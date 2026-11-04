@@ -1,0 +1,361 @@
+:root {
+  --frame: #3b4524;
+  --frame-deep: #2d361b;
+  --desk: #e6e2d0;
+  --desk-line: #c8c3ab;
+  --board: #fbfbf7;
+  --ink: #24281f;
+  --ink-soft: #5a5f4e;
+  --blue: #1d4f9f;
+  --red: #b3362d;
+  --paper-text: #eef0e2;
+  --title-font: "Bahnschrift", "DIN Alternate", "Arial Narrow", "Roboto Condensed",
+    system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- layout: library | board | instructor ---------- */
+
+.room {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  min-height: 100vh;
+}
+
+/* ---------- left: training material ---------- */
+
+.library {
+  background: var(--desk);
+  border-right: 1px solid var(--desk-line);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.library h1 {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: 1.6rem;
+  line-height: 1.15;
+  color: var(--frame);
+}
+
+.library h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.status {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+}
+
+.status-bad {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.note {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.footnote {
+  margin: auto 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.library input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--board);
+  border: 2px solid var(--desk-line);
+  border-radius: 6px;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 600;
+  border: 2px solid var(--frame);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--frame);
+  color: var(--paper-text);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--frame-deep);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--frame);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(59, 69, 36, 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-btn {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+
+.file-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.file-btn:focus-within {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ---------- center: the whiteboard ---------- */
+
+.stage {
+  background: var(--desk);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.board {
+  position: relative;
+  flex: 1;
+  min-height: 55vh;
+  padding: 40px 48px 56px;
+  background: var(--board);
+  border: 12px solid var(--frame);
+  border-radius: 8px;
+  box-shadow: 0 3px 0 var(--frame-deep), inset 0 0 0 1px var(--desk-line);
+}
+
+.board-title {
+  margin: 0 0 28px;
+  font-family: var(--title-font);
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+  line-height: 1.1;
+  color: var(--blue);
+  animation: write 0.7s ease-out both;
+}
+
+.board-points {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* each point is written left to right, like a marker */
+.board-points li {
+  position: relative;
+  max-width: 36ch;
+  padding-left: 40px;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  line-height: 1.35;
+  color: var(--ink);
+  animation: write 0.7s ease-out both;
+}
+
+/* a red marker dash in place of a bullet */
+.board-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--red);
+}
+
+.board-source {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+@keyframes write {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.indicator {
+  margin-left: auto;
+  color: var(--ink-soft);
+}
+
+.message {
+  max-width: 52ch;
+  margin: auto;
+  padding: 40px;
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  background: var(--board);
+  border: 2px dashed var(--desk-line);
+  border-radius: 8px;
+}
+
+.message-bad {
+  color: var(--ink);
+  border-color: var(--red);
+}
+
+.check {
+  padding: 18px 22px;
+  background: var(--board);
+  border-left: 6px solid var(--red);
+  border-radius: 6px;
+}
+
+.check h3 {
+  margin: 0 0 8px;
+  font-family: var(--title-font);
+  font-size: 1.25rem;
+}
+
+.check p {
+  margin: 0 0 12px;
+}
+
+.check .answer {
+  font-weight: 600;
+  color: var(--blue);
+}
+
+/* ---------- right: the instructor ---------- */
+
+.instructor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 24px;
+  background: var(--frame);
+  color: var(--paper-text);
+}
+
+.avatar {
+  width: min(100%, 260px);
+  height: auto;
+}
+
+.avatar .eye,
+.avatar .mouth {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.avatar .eye {
+  animation: blink 5s infinite;
+}
+
+.avatar.speaking .mouth {
+  animation: talk 0.6s infinite;
+}
+
+@keyframes blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes talk {
+     0%, 100% { transform: scaleY(1); }
+     25% { transform: scaleY(1.8); }
+     50% { transform: scaleY(1.2); }
+     75% { transform: scaleY(2.2); }
+}
+
+.caption {
+  width: 100%;
+  max-width: 34ch;
+  min-height: 8em;
+  margin: 0;
+  padding-top: 18px;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  border-top: 1px solid rgba(238, 240, 226, 0.25);
+}
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 960px) {
+  .room {
+    grid-template-columns: 1fr;
+  }
+
+  .library {
+    border-right: none;
+    border-bottom: 1px solid var(--desk-line);
+  }
+
+  .board {
+    padding: 24px 20px 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-title,
+  .board-points li,
+  .avatar .eye,
+  .avatar.speaking .mouth {
+    animation: none;
+  }
+}
