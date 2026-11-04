@@ -1,6 +1,6 @@
 // A simple 2D instructor. The mouth animates while `speaking` is true.
 // Stage 5 will drive `speaking` from the real audio instead of a timer.
-export default function Avatar({ speaking }) {
+  export default function Avatar({ speaking, openness = 0 }) {
   return (
     <svg
       className={`avatar${speaking ? " speaking" : ""}`}
@@ -39,7 +39,7 @@ export default function Avatar({ speaking }) {
         strokeLinecap="round"
       />
       {/* mouth */}
-      <ellipse className="mouth" cx="100" cy="140" rx="14" ry="3" fill="#6B2D2D" />
+      <ellipse className="mouth" cx="100" cy="140" rx="14" ry="3" fill="#6B2D2D" style={{ transform: `scaleY(${1 + openness * 2})` }} />
     </svg>
   );
 }

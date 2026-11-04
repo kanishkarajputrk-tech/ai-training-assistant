@@ -3,10 +3,11 @@ import Avatar from "./Avatar";
 import "./App.css";
 
 const API = "http://127.0.0.1:8000";
+const hasSpeech = typeof window !== "undefined" && "speechSynthesis" in window;
 
-// Rough time to speak a narration aloud (about 2.5 words per second).
-// In Stage 5 this is replaced by the real length of the audio.
-function speakingTime(text) {
+// Fallback when no voice is available: time to read the text aloud
+// (about 2.5 words per second), so the lesson still plays silently.
+function readingTime(text) {
   const words = text.trim().split(/\s+/).length;
   return Math.max(3000, (words / 2.5) * 1000);
 }
@@ -17,6 +18,14 @@ function describeError(err) {
     return "Can't reach the backend. Start it with: python -m uvicorn main:app --reload (run inside the backend folder).";
   }
   return err.message;
+}
+
+function pickDefaultVoice(voices) {
+  return (
+    voices.find((v) => v.lang === "en-IN") ||
+    voices.find((v) => v.lang.startsWith("en")) ||
+    voices[0]
+  );
 }
 
 export default function App() {
@@ -34,11 +43,14 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
 
+  const [voices, setVoices] = useState([]);
+  const [voiceURI, setVoiceURI] = useState("");
+  const [mouth, setMouth] = useState(0); // 0 = closed, 1 = open
+
   const steps = lesson && lesson.found ? lesson.steps : [];
   const step = steps[stepIndex];
   const isLast = stepIndex === steps.length - 1;
 
-  // Ask the backend how much material is stored
   async function refreshHealth() {
     try {
       const res = await fetch(`${API}/health`);
@@ -54,15 +66,93 @@ export default function App() {
     refreshHealth();
   }, []);
 
-  // While "playing", move to the next step after the narration time is up
+  // Load the voices installed on this computer. Only offline ("local")
+  // voices are kept, so no text is ever sent to an online speech service.
+  useEffect(() => {
+    if (!hasSpeech) return;
+    function loadVoices() {
+      const local = window.speechSynthesis.getVoices().filter((v) => v.localService);
+      setVoices(local);
+      setVoiceURI((current) => current || pickDefaultVoice(local)?.voiceURI || "");
+    }
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // While "playing": speak the narration, move the mouth, then go to the next step
   useEffect(() => {
     if (!playing || !step) return;
-    const timer = setTimeout(() => {
+
+    let stopped = false;
+    let gotWordEvent = false;
+    let flapTimer = null;
+    let closeTimer = null;
+    let gapTimer = null;
+    let readTimer = null;
+
+    const flap = () => {
+      setMouth(1);
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(() => setMouth(0.25), 110);
+    };
+
+    const finishStep = () => {
+      if (stopped) return;
+      clearInterval(flapTimer);
+      setMouth(0);
       if (isLast) setPlaying(false);
-      else setStepIndex((i) => i + 1);
-    }, speakingTime(step.narration));
-    return () => clearTimeout(timer);
-  }, [playing, stepIndex, step, isLast]);
+      else gapTimer = setTimeout(() => setStepIndex((i) => i + 1), 600);
+    };
+
+    // If the voice sends no word events, keep the mouth moving anyway
+    flapTimer = setInterval(() => {
+      if (!gotWordEvent) flap();
+    }, 260);
+
+    const voice = voices.find((v) => v.voiceURI === voiceURI);
+    if (hasSpeech && voice) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(step.narration);
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+      utterance.rate = 0.95;
+      utterance.onboundary = () => {
+        gotWordEvent = true;
+        flap();
+      };
+      utterance.onend = finishStep;
+      utterance.onerror = finishStep; // cancel() also lands here; `stopped` ignores it
+      window.speechSynthesis.speak(utterance);
+    } else {
+      readTimer = setTimeout(finishStep, readingTime(step.narration));
+    }
+
+    return () => {
+      stopped = true;
+      clearInterval(flapTimer);
+      clearTimeout(closeTimer);
+      clearTimeout(gapTimer);
+      clearTimeout(readTimer);
+      if (hasSpeech) window.speechSynthesis.cancel();
+      setMouth(0);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, stepIndex, step, isLast, voiceURI]);
+
+  function testVoice() {
+    const voice = voices.find((v) => v.voiceURI === voiceURI);
+    if (!hasSpeech || !voice) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(
+      "Hello, I am your instructor. This is how I will sound."
+    );
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    window.speechSynthesis.speak(utterance);
+  }
 
   async function handleUpload(e) {
     const file = e.target.files[0];
@@ -148,6 +238,33 @@ export default function App() {
             />
           </label>
           {uploadMsg && <p className="note">{uploadMsg}</p>}
+        </section>
+
+        <section>
+          <h2>Instructor voice</h2>
+          {voices.length > 0 ? (
+            <>
+              <select
+                value={voiceURI}
+                onChange={(e) => setVoiceURI(e.target.value)}
+                aria-label="Instructor voice"
+              >
+                {voices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+              <button type="button" className="btn btn-secondary" onClick={testVoice}>
+                Test voice
+              </button>
+            </>
+          ) : (
+            <p className="note">
+              No offline voice was found, so lessons will play silently. Add one in
+              Windows Settings under Time &amp; language, then Speech.
+            </p>
+          )}
         </section>
 
         <form onSubmit={startLesson}>
@@ -252,7 +369,7 @@ export default function App() {
 
       <aside className="instructor">
         <h2 className="sr-only">Instructor</h2>
-        <Avatar speaking={playing} />
+        <Avatar speaking={playing} openness={mouth} />
         <p className="caption" aria-live="polite">
           {step ? step.narration : "Ready when you are."}
         </p>

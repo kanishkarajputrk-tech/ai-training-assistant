@@ -359,3 +359,23 @@
     animation: none;
   }
 }
+
+/* Stage 5: the mouth follows the speech, so the timer animation is off */
+.avatar.speaking .mouth {
+  animation: none;
+}
+
+.avatar .mouth {
+  transition: transform 90ms ease-out;
+}
+
+.library select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--board);
+  border: 2px solid var(--desk-line);
+  border-radius: 6px;
+}
