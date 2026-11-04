@@ -96,7 +96,7 @@ export default function App() {
     const flap = () => {
       setMouth(1);
       clearTimeout(closeTimer);
-      closeTimer = setTimeout(() => setMouth(0.25), 110);
+      closeTimer = setTimeout(() => setMouth(0.25), 200);
     };
 
     const finishStep = () => {

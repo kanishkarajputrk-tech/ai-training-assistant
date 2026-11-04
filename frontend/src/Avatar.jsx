@@ -39,7 +39,7 @@
         strokeLinecap="round"
       />
       {/* mouth */}
-      <ellipse className="mouth" cx="100" cy="140" rx="14" ry="3" fill="#6B2D2D" style={{ transform: `scaleY(${1 + openness * 2})` }} />
+      <ellipse className="mouth" cx="100" cy="140" rx="14" ry="3" fill="#6B2D2D" style={{ transform: `scaleY(${1 + openness * 1})` }} />
     </svg>
   );
 }
